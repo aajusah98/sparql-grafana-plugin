@@ -32,6 +32,14 @@ func NewDatasource(_ context.Context, _ backend.DataSourceInstanceSettings) (ins
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type Datasource struct {
+	URL        string `json:"url"`        // Maps to "url" in the JSON
+	Repository string `json:"Repository"` // Maps to "repository" in the JSON
+	Username   string `json:"username"`   // Maps to "username" in the JSON
+	Password   string `json:"password"`   // Assuming this comes from secureJsonData and is decrypted
+}
+
+type MyQuery struct {
+	RdfQuery string `json:"rdfQuery"` // Ensure the json tag matches the key used in the frontend
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -46,104 +54,81 @@ func (d *Datasource) Dispose() {
 // The QueryDataResponse contains a map of RefID to the response for each query, and each response
 // contains Frames ([]*Frame).
 func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+
+	var settings Datasource
+	// Unmarshal jsonData into settings
+	if err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &settings); err != nil {
+		return nil, fmt.Errorf("error unmarshalling jsonData: %w", err)
+	}
+
+	settings.Password = req.PluginContext.DataSourceInstanceSettings.DecryptedSecureJSONData["password"]
+
 	// create response struct
 	response := backend.NewQueryDataResponse()
 
-	// loop over queries and execute them individually.
 	for _, q := range req.Queries {
-		res := d.query(ctx, req.PluginContext, q)
+		var res backend.DataResponse
 
-		// save the response in a hashmap
-		// based on with RefID as identifier
+		var queryModel MyQuery
+		err := json.Unmarshal(q.JSON, &queryModel)
+		if err != nil {
+			res.Error = err
+			response.Responses[q.RefID] = res
+			continue
+		}
+
+		res = d.query(ctx, queryModel, settings)
+
 		response.Responses[q.RefID] = res
+
 	}
 
 	return response, nil
 }
 
-type queryModel struct{}
+func (d *Datasource) query(ctx context.Context, queryModel MyQuery, settings Datasource) backend.DataResponse {
 
-func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
-	var response backend.DataResponse
+	response := backend.DataResponse{}
 
-	// Unmarshal the JSON into our queryModel.
-	var qm queryModel
+	backend.Logger.Debug("Rdf query", "queery", queryModel.RdfQuery)
+	backend.Logger.Debug("Test URL", "URL", settings.URL)
 
-	err := json.Unmarshal(query.JSON, &qm)
-	if err != nil {
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
-	}
-	repo, err := sparql.NewRepo("https://query.wikidata.org/sparql")
+	repo, err := sparql.NewRepo(settings.URL)
 	if err != nil {
 
 	}
 
-	// queryString := `
-	// 	SELECT ?item ?itemLabel WHERE {
-	// 		?item wdt:P31 wd:Q146.
-	// 		SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-	// 	}`
-
-	queryString := `SELECT ?author ?authorLabel ?count
-		WITH {
-		  SELECT ?author (COUNT(?paper) AS ?count)
-		  WHERE {
-			?article schema:about ?author ;
-			  schema:isPartOf <https://species.wikimedia.org/> .
-			?author wdt:P31 wd:Q5.
-			?paper wdt:P50 ?author.
-		  }
-		  GROUP BY ?author
-		  ORDER BY DESC(?count)
-		  LIMIT 200
-		} AS %i
-		WHERE {
-		  INCLUDE %i
-		  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en" . }
-		}
-		ORDER BY DESC(?count)`
-	res, err := repo.Query(queryString)
+	res, err := repo.Query(queryModel.RdfQuery)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// duration := query.TimeRange.To.Sub(query.TimeRange.From)
-	// mid := query.TimeRange.From.Add(duration / 2)
-
-	// bindings := res.Bindings()
-
-	// for _, tr := range bindings["data"] {
-	// 	i, _ := strconv.Atoi(tr.String())
-	// vals = append(vals, int64(i))
-
-	// }
-	var items []string
-	var itemLabels []string
-	var counts []string
-
-	for _, result := range res.Results.Bindings {
-		item := result["author"].Value
-		itemLabel := result["authorLabel"].Value
-		count := result["count"].Value
-		items = append(items, item)
-		itemLabels = append(itemLabels, itemLabel)
-		counts = append(counts, count)
+	// Use the first row to extract column names (bindings)
+	columnNames := make([]string, 0, len(res.Results.Bindings[0]))
+	for name := range res.Results.Bindings[0] {
+		columnNames = append(columnNames, name)
 	}
+	// Now `columnNames` contains all the column names from the result set
 
-	fmt.Println(itemLabels)
-	// create data frame response.
-	// For an overview on data frames and how grafana handles them:
-	// https://grafana.com/developers/plugin-tools/introduction/data-frames
+	backend.Logger.Debug("ColumnNames", "ColNames", columnNames)
+
 	frame := data.NewFrame("response")
 
-	// add fields.
-	frame.Fields = append(frame.Fields,
-		data.NewField("item", nil, items),
-		data.NewField("values", nil, itemLabels),
-		data.NewField("count", nil, counts),
-	)
+	// For each column name, create a new field
+	for _, name := range columnNames {
+		// Here you might decide the type of the field based on the expected result type
+		// For simplicity, let's assume all fields are of type string
+		frame.Fields = append(frame.Fields, data.NewField(name, nil, []string{}))
+	}
 
-	// add the frames to the response.
+	for _, row := range res.Results.Bindings {
+		for i, name := range columnNames {
+			value := row[name].Value // Assuming this is how you get a value for a column in a row
+			// Since we assumed fields are of type []string, we can directly append
+			frame.Fields[i].Append(value)
+		}
+	}
+
 	response.Frames = append(response.Frames, frame)
 
 	return response
