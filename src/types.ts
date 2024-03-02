@@ -4,7 +4,6 @@ import { DataQuery } from '@grafana/schema';
 // Define the structure of a query for your data source
 export interface MyQuery extends DataQuery {
   rdfQuery: string;
-  Format: Format;
 }
 
 // Define an enum for visualization format in the Query Editor
@@ -12,13 +11,9 @@ export enum Format {
   Table = 'table'
 }
 
-// Define a type for the visualization format
-export type FormatInterface = {
-  [key in Format]: string;
-};
 
-/**
- * These are options configured for each DataSource instance
+/**Interface DataSourceJsonData
+ * It helps define the data  to configured for each DataSource instance
  */
 export interface MyDataSourceOptions extends DataSourceJsonData {
   url: string;
@@ -26,7 +21,8 @@ export interface MyDataSourceOptions extends DataSourceJsonData {
   username?: string;
 }
 
-// Define secure options that are not sent over HTTP to the frontend
+// MysecureDataSource interface helps to secure data that are not sent over HTTP to the frontend
+// helps to useful for handling sensitive information
 export interface MySecureDataSourceOptions {
   password?: string;
 }

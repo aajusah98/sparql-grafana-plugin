@@ -1,6 +1,5 @@
-// creating form UI for users to collect necessary information for connecting to the SparQL backend
 import React, { ChangeEvent, PureComponent } from 'react';
-import { LegacyForms } from '@grafana/ui';
+import { LegacyForms, InlineFieldRow, InlineFormLabel, Button } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { MyDataSourceOptions, MySecureDataSourceOptions } from 'types';
 
@@ -8,9 +7,15 @@ const { SecretFormField, FormField } = LegacyForms;
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions, MySecureDataSourceOptions> {}
 
-interface State {}
+interface State {
+  isSparqlEndpointValid: boolean | null;
+}
 
 export class ConfigEditor extends PureComponent<Props, State> {
+  state: State = {
+    isSparqlEndpointValid: null,
+  };
+
   onUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
@@ -18,12 +23,40 @@ export class ConfigEditor extends PureComponent<Props, State> {
       url: event.target.value,
     };
     onOptionsChange({ ...options, jsonData });
+
+    // Reset validation result when URL changes
+    this.setState({ isSparqlEndpointValid: null });
   };
-  nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
+
+  // Method to validate SPARQL endpoint
+
+  validateSparqlEndpoint = () => {
+    const { options } = this.props;
+    const { jsonData } = options;
+    const { url } = jsonData;
+
+    // Regular expression for a basic URL format
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
+
+    // Additional checks specific to SPARQL endpoint URLs
+    const sparqlEndpointRegex = /\/(sparql|query)$/i;
+
+    // Check if the URL matches the general format
+    const isUrlValid = urlRegex.test(url || '');
+
+    // Check if the URL contains "/sparql" or "/query" at the end
+    const isSparqlEndpointValid = sparqlEndpointRegex.test(url || '');
+
+    // Set the validation result in the state
+    this.setState({ isSparqlEndpointValid: isUrlValid && isSparqlEndpointValid });
+  };
+
+//Event handler to handle for changes in the repository', 'username' and 'password' input field
+nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
       ...options.jsonData,
-      database: event.target.value,
+      Repository: event.target.value,
     };
     onOptionsChange({ ...options, jsonData });
   };
@@ -57,6 +90,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
     const secureJsonFields = {
       ...options.secureJsonFields,
       password: false,
+      //sets the 'password' field in secureJsonFields to false to indicate that the password is not set.
     };
 
     onOptionsChange({ ...options, secureJsonFields, secureJsonData });
@@ -65,9 +99,11 @@ export class ConfigEditor extends PureComponent<Props, State> {
   render() {
     const { options } = this.props;
     const { jsonData, secureJsonData, secureJsonFields } = options;
+    const { isSparqlEndpointValid } = this.state;
 
     return (
       <div className="gf-form-group">
+        {/* Existing form fields */}
         <div className="gf-form">
           <FormField
             label="Url"
@@ -85,8 +121,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
             labelWidth={6}
             inputWidth={20}
             onChange={this.nDatabaseChange}
-            value={jsonData.Repository|| ''}
-            placeholder="Ontology Repository"
+            value={jsonData.Repository || ''}
+            placeholder="My Repository"
           />
         </div>
 
@@ -115,7 +151,28 @@ export class ConfigEditor extends PureComponent<Props, State> {
             />
           </div>
         </div>
+
+        {/* New field for SPARQL endpoint validation */}
+        <InlineFieldRow>
+          <InlineFormLabel width={6}>Validation</InlineFormLabel>
+          <div>
+            {isSparqlEndpointValid !== null &&
+              (isSparqlEndpointValid ? (
+                <p style={{ color: 'green' }}>Valid SPARQL endpoint!</p>
+              ) : (
+                <p style={{ color: 'red' }}>Invalid SPARQL endpoint.</p>
+              ))}
+          </div>
+        </InlineFieldRow>
+
+        {/* Button for manual validation */}
+        <InlineFieldRow>
+          <Button variant="secondary" onClick={this.validateSparqlEndpoint}>
+            URL test
+          </Button>
+        </InlineFieldRow>
       </div>
     );
   }
 }
+
