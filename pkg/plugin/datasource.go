@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -90,12 +91,6 @@ func (d *Datasource) query(ctx context.Context, queryModel MyQuery, settings Dat
 
 	response := backend.DataResponse{}
 
-	backend.Logger.Debug("Rdf query", "queery", queryModel.RdfQuery)
-	backend.Logger.Debug("Test URL", "URL", settings.URL)
-	backend.Logger.Debug("Test username", "username", settings.Username)
-	backend.Logger.Debug("Test username", "repo", settings.Repository)
-	backend.Logger.Debug("Test username", "password", settings.Password)
-
 	repo, err := sparql.NewRepo(settings.URL,
 		sparql.DigestAuth(settings.Username, settings.Password),
 		sparql.Timeout(time.Millisecond*1500),
@@ -145,17 +140,42 @@ func (d *Datasource) query(ctx context.Context, queryModel MyQuery, settings Dat
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	var status = backend.HealthStatusOk
-	var message = "Data source is working"
-
-	if rand.Int()%2 == 0 {
-		status = backend.HealthStatusError
-		message = "randomized error"
+func (d *Datasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	var settings Datasource
+	if err := json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &settings); err != nil {
+		return nil, fmt.Errorf("error unmarshalling jsonData: %w", err)
 	}
 
+	// Simple URL format validation
+	_, err := url.ParseRequestURI(settings.URL)
+	if err != nil {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "Invalid URL format",
+		}, nil
+	}
+
+	// Optional: Lightweight check if the URL is reachable
+	// Making a HEAD request to avoid downloading content
+	resp, err := http.Head(settings.URL)
+	if err != nil {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "URL is not reachable",
+		}, nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return &backend.CheckHealthResult{
+			Status:  backend.HealthStatusError,
+			Message: "URL is reachable but returned an error status",
+		}, nil
+	}
+
+	// URL is well-formed and reachable
 	return &backend.CheckHealthResult{
-		Status:  status,
-		Message: message,
+		Status:  backend.HealthStatusOk,
+		Message: "URL is valid and reachable",
 	}, nil
 }
