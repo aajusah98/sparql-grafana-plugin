@@ -10,12 +10,8 @@ Welcome to the SPARQL Data Source Plugin for Grafana, an open-source plugin that
 - **Visualization Compatibility**: Compatible with a wide range of Grafana visualization panels, including tables.
 - **Secure Connections**: Support for HTTP and HTTPS SPARQL endpoints with basic auth or token-based authentication methods.
 
-Version 10.3.3
 
 Before you begin, ensure you have the following:
-
-
-
 ## Prerequisites
 - Grafana (version 10.3.3 or higher)
 - Mage Build Tool v1.15.0-5-g2385abb
@@ -76,11 +72,11 @@ http://localhost:3000/connections/datasources/fau-sparql-datasource
 
 ### Configure Data
 Configure SPARQL as DataSource
-![DataSource Config Editor](docs/DataSourceConfigEditor.png)
+![DataSource Config Editor](docs/ConfigEditor.png)
 
 ### Query Data
 
-Query Neo4j DataSource with Cypher Query Language and display as Table
+Query SPARQL DataSource with Query Language and display as Table
 
 ![DataSource Query Editor](docs/QueryEditor.tsx.png)
 
