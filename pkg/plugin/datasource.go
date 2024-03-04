@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -92,15 +92,22 @@ func (d *Datasource) query(ctx context.Context, queryModel MyQuery, settings Dat
 
 	backend.Logger.Debug("Rdf query", "queery", queryModel.RdfQuery)
 	backend.Logger.Debug("Test URL", "URL", settings.URL)
+	backend.Logger.Debug("Test username", "username", settings.Username)
+	backend.Logger.Debug("Test username", "repo", settings.Repository)
+	backend.Logger.Debug("Test username", "password", settings.Password)
 
-	repo, err := sparql.NewRepo(settings.URL)
+	repo, err := sparql.NewRepo(settings.URL,
+		sparql.DigestAuth(settings.Username, settings.Password),
+		sparql.Timeout(time.Millisecond*1500),
+	)
+
 	if err != nil {
-
+		backend.Logger.Debug("Error creating SPARQL repository", "Repo", err)
 	}
-
 	res, err := repo.Query(queryModel.RdfQuery)
+
 	if err != nil {
-		log.Fatal(err)
+		backend.Logger.Debug("Error creating SPARQL queery", "Repo", err)
 	}
 
 	// Use the first row to extract column names (bindings)
