@@ -1,3 +1,4 @@
+// Form Editor UI design collecting information from the user
 import React, { ChangeEvent, PureComponent } from 'react';
 import { LegacyForms, InlineFieldRow, InlineFormLabel, Button } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
