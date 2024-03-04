@@ -13,7 +13,7 @@ interface State {
 }
 
 // QueryEditor component definition
-export class QueryEditor extends PureComponent<Props> {
+export class QueryEditor extends PureComponent<Props, State > {
   state: State = {
     validationMessage: '',
   };
@@ -28,48 +28,40 @@ export class QueryEditor extends PureComponent<Props> {
   // New method for handling SPARQL query validation
   validateSparqlQuery = () => {
     const { query, onRunQuery } = this.props;
+    console.log("Validating SPARQL query:", query.rdfQuery);
+    this.setState({ validationMessage: '' }); 
 
-
-    // Example: Check if the SPARQL query is not empty
-    const isValid = query.rdfQuery.trim() !== '';
-
-    // Set the validation message based on the validation result
-    let validationMessage = isValid ? 'SPARQL query is valid!' : 'SPARQL query is not valid. Please provide a valid query.';
-
-    
-    // Parse the SPARQL query to check its structure 
-    try {
-  const parser = new SparqlParser();
-  const parsedQuery = parser.parse(query.rdfQuery);
-
-  // Check if the parsedQuery has a valid structure based on your requirements
-  if (isValidStructure(parsedQuery)) {
-    console.log('Parsed SPARQL query:', parsedQuery);
-
-  } else {
-    validationMessage = 'SPARQL query has an invalid structure. Please provide a valid query structure.';
+    if (!query?.rdfQuery?.trim()) {
+      // If query is empty, update message and don't proceed further
+      this.setState({ validationMessage: 'SPARQL query is empty. Please provide a query.' });
+      return;
   }
-    }  catch (error) {
-    console.error('Error parsing SPARQL query:', error);
-    validationMessage = 'SPARQL query is not valid. Please provide a valid query.';
-    }
-     
-    // Function to check the structure of the parsed query
-    function isValidStructure(parsedQuery: any): boolean {
     
-      const expectedStructure = 'select (?x as ?xString)(count(?y) as ?count){ ?x ?y ?z }';
-      return parsedQuery.type === 'query' && parsedQuery.where === expectedStructure;
+    try {
+      const parser = new SparqlParser();
+      parser.parse(query.rdfQuery.trim());
+      const parsedQuery = parser.parse(query.rdfQuery.trim());
+
+      // Assuming isValidStructure properly checks the parsed query structure
+      if (isValidStructure(parsedQuery)) {
+          // Query is structurally valid
+          this.setState({ validationMessage: 'SPARQL query is valid!' });
+          onRunQuery(); // Consider moving this outside if you only want to validate without executing
+      } else {
+          // Query structure is invalid 
+          this.setState({ validationMessage: 'SPARQL query has an invalid structure. Please provide a valid query.' });
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      this.setState({ validationMessage: `SPARQL query is not valid. ${errorMessage}` });
     }
-
-     
-    // Update the state with the validation message
-    this.setState({ validationMessage });
-
-
-    // Trigger a query run if needed
-    if (isValid) {
+    // Define isValidStructure according to your actual validation requirements
+      function isValidStructure(parsedQuery: any): boolean {
+      // For example, checking if it's a SELECT query
+      return parsedQuery.queryType === 'SELECT';
+      }
       onRunQuery();
-    }
   };
 
   render() {
@@ -78,6 +70,17 @@ export class QueryEditor extends PureComponent<Props> {
 
     return (
       <div>
+         {/* Validation Button */}
+         <Button variant="primary" onClick={this.validateSparqlQuery}>
+          <Icon name="check" /> Validate SPARQL Query
+        </Button>
+
+        {/* Display the validation message */}
+        {validationMessage && (
+          <div style={{ marginTop: '10px', color: validationMessage.includes('not valid') ? 'red' : 'green' }}>
+            {validationMessage}
+          </div>
+        )}
         <CodeEditor
           height={'240px'}
           onEditorDidMount={(editor) => {
@@ -90,17 +93,7 @@ export class QueryEditor extends PureComponent<Props> {
           language={'sparql'}
         />
 
-        {/* Validation Button */}
-        <Button variant="primary" onClick={this.validateSparqlQuery}>
-          <Icon name="check" /> Validate SPARQL Query
-        </Button>
-
-        {/* Display the validation message */}
-        {validationMessage && (
-          <div style={{ marginTop: '10px', color: validationMessage.includes('not valid') ? 'red' : 'green' }}>
-            {validationMessage}
-          </div>
-        )}
+       
       </div>
     );
   }
