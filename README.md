@@ -72,13 +72,13 @@ http://localhost:3000/connections/datasources/fau-sparql-datasource
 
 ### Configure Data
 Configure SPARQL as DataSource
-![DataSource Config Editor](docs/ConfigEditor.png)
+![DataSource Config Editor](img/ConfigEditor.png)
 
 ### Query Data
 
 Query SPARQL DataSource with Query Language and display as Table
 
-![DataSource Query Editor](docs/QueryEditor.tsx.png)
+![DataSource Query Editor](img/QueryEditor.tsx.png)
 
 ## Examples:
 Here are a few example queries to get you started:
