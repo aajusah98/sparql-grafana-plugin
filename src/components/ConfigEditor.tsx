@@ -29,18 +29,15 @@ export class ConfigEditor extends PureComponent<Props> {
   };
 
 
-    /**
-     * Handles changes to the Repository input field.
-     * @param {ChangeEvent<HTMLInputElement>} event - The event triggered by changing the repository input field.
-     */
-nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onOptionsChange, options } = this.props;
-    const jsonData = {
-      ...options.jsonData,
-      Repository: event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData });
-  };
+  
+      nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
+          const { onOptionsChange, options } = this.props;
+          const jsonData = {
+            ...options.jsonData,
+            Repository: event.target.value,
+          };
+          onOptionsChange({ ...options, jsonData });
+        };
 
   /**
    * Handles changes to the Username input field.
@@ -69,9 +66,9 @@ nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({ ...options, secureJsonData });
   };
 
-  /**
-   * Resets the Password field to an empty value.
-   */
+/**
+ * Resets the Password field to an empty value.
+ */
   onResetPassword = () => {
     const { onOptionsChange, options } = this.props;
     const secureJsonData = {
