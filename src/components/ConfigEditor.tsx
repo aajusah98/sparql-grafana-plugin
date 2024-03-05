@@ -1,4 +1,7 @@
-// Form Editor UI design collecting information from the user
+/**
+ * ConfigEditor is a React component for configuring datasource options.
+ * It allows users to set URL, Repository, Username, and Password for accessing the SPARQL endpoint.
+ */
 import React, { ChangeEvent, PureComponent } from 'react';
 import { LegacyForms } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
@@ -8,15 +11,13 @@ const { SecretFormField, FormField } = LegacyForms;
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions, MySecureDataSourceOptions> {}
 
-interface State {
-  isSparqlEndpointValid: boolean | null;
-}
 
-export class ConfigEditor extends PureComponent<Props, State> {
-  state: State = {
-    isSparqlEndpointValid: null,
-  };
 
+export class ConfigEditor extends PureComponent<Props> {
+  /**
+   * Handles changes to the SPARQL endpoint URL field.
+   * @param {ChangeEvent<HTMLInputElement>} event - The event triggered by changing the URL input field.
+   */
   onUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
@@ -28,7 +29,10 @@ export class ConfigEditor extends PureComponent<Props, State> {
   };
 
 
-//Event handler to handle for changes in the repository', 'username' and 'password' input field
+    /**
+     * Handles changes to the Repository input field.
+     * @param {ChangeEvent<HTMLInputElement>} event - The event triggered by changing the repository input field.
+     */
 nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
@@ -38,6 +42,10 @@ nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({ ...options, jsonData });
   };
 
+  /**
+   * Handles changes to the Username input field.
+   * @param {ChangeEvent<HTMLInputElement>} event - The event triggered by changing the username input field.
+   */
   onUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
@@ -47,6 +55,10 @@ nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({ ...options, jsonData });
   };
 
+  /**
+   * Handles changes to the Password input field.
+   * @param {ChangeEvent<HTMLInputElement>} event - The event triggered by changing the password input field.
+   */
   onPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const secureJsonData = {
@@ -57,6 +69,9 @@ nDatabaseChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({ ...options, secureJsonData });
   };
 
+  /**
+   * Resets the Password field to an empty value.
+   */
   onResetPassword = () => {
     const { onOptionsChange, options } = this.props;
     const secureJsonData = {
