@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SPARQL Go Code Documentation: plugin Package</title>
+    <style>
+        body { font-family: Arial, sans-serif;background-color: #2b2e33; }
+        .container { width: 80%; margin: auto; }
+        .section { margin-top: 20px; }
+        .subsection { margin-left: 20px; }
+        code {  padding: 2px 4px; }
+    </style>
+</head>
+<body >
+    <div class="container"  >
+        <h1>SPARQL Backend Documentation</h1>
+        <p>This documentation covers the components of the plugin package, focusing on extending Grafana data sources with SPARQL queries.</p>
+        
+        <div class="section">
+            <h2>Type: Datasource</h2>
+            <p>Represents a datasource capable of handling data queries, health checks, and resource management for SPARQL endpoints.</p>
+            <div class="subsection">
+                <h3>Fields</h3>
+                <ul>
+                    <li><code>URL</code>: Endpoint URL for the SPARQL repository.</li>
+                    <li><code>Repository</code>: Identifier for the SPARQL repository.</li>
+                    <li><code>Username</code>: Username for authentication with the SPARQL endpoint.</li>
+                    <li><code>Password</code>: Password for authentication with the SPARQL endpoint.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Function: NewDatasource</h2>
+            <p>Creates a new instance of the Datasource type.</p>
+            <div class="subsection">
+                <h3>Parameters</h3>
+                <ul>
+                    <li><code>context.Context</code>: Context for managing deadlines, cancellations, and other request-scoped values.</li>
+                    <li><code>backend.DataSourceInstanceSettings</code>: Settings for the data source instance provided by Grafana.</li>
+                </ul>
+                <h3>Returns</h3>
+                <ul>
+                    <li><code>instancemgmt.Instance</code>: A new Datasource instance.</li>
+                    <li><code>error</code>: Error, if any occurred during the instantiation.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Method: QueryData</h2>
+            <p>Handles multiple queries and returns corresponding responses.</p>
+            <div class="subsection">
+                <h3>Parameters</h3>
+                <ul>
+                    <li><code>context.Context</code>: Context for managing deadlines, cancellations, and other request-scoped values.</li>
+                    <li><code>*backend.QueryDataRequest</code>: Contains the queries to be executed.</li>
+                </ul>
+                <h3>Returns</h3>
+                <ul>
+                    <li><code>*backend.QueryDataResponse</code>: Contains the responses for each query.</li>
+                    <li><code>error</code>: Error, if any occurred during query execution.</li>
+                </ul>
+                <h3>Description</h3>
+                <p>This method unmarshals the incoming query data, executes each query against the configured SPARQL endpoint, and formats the results into a Grafana-compatible data frame.</p>
+            </div>
+        </div>
+
+                <!-- Method: query -->
+                <div class="section">
+                    <h2>Method: query</h2>
+                    <p>Executes a SPARQL query against the configured repository and formats the result as a Grafana data frame.</p>
+                    <div class="subsection">
+                        <h3>Parameters</h3>
+                        <ul>
+                            <li><code>context.Context</code>: Context for managing deadlines, cancellations, and other request-scoped values.</li>
+                            <li><code>MyQuery</code>: Struct containing the RDF query to be executed.</li>
+                            <li><code>Datasource</code>: Datasource configuration including the repository URL, credentials, and other settings.</li>
+                        </ul>
+                        <h3>Returns</h3>
+                        <ul>
+                            <li><code>backend.DataResponse</code>: The response containing data frames with the query results.</li>
+                        </ul>
+                        <h3>Description</h3>
+                        <p>This method initializes a SPARQL repository using the provided settings, executes the given RDF query, and constructs a data frame with the results. It handles errors in repository creation and query execution by logging them. The method dynamically creates fields in the data frame based on the column names (bindings) in the query result.</p>
+                    </div>
+                </div>
+        
+                <!-- Method: CheckHealth -->
+                <div class="section">
+                    <h2>Method: CheckHealth</h2>
+                    <p>Performs a health check of the datasource to validate its configuration and accessibility.</p>
+                    <div class="subsection">
+                        <h3>Parameters</h3>
+                        <ul>
+                            <li><code>context.Context</code>: Context for managing deadlines, cancellations, and other request-scoped values.</li>
+                            <li><code>*backend.CheckHealthRequest</code>: Request containing the context and settings for the health check.</li>
+                        </ul>
+                        <h3>Returns</h3>
+                        <ul>
+                            <li><code>*backend.CheckHealthResult</code>: Result of the health check, including status and a message.</li>
+                        </ul>
+                        <h3>Description</h3>
+                        <p>This method checks the health of the datasource by validating the URL format and attempting a lightweight connection test via a HEAD request. It is primarily used to verify datasource configuration from the Grafana UI. The method returns a health status indicating whether the datasource is configured correctly and reachable.</p>
+                    </div>
+                </div>
+        
+
+        <!-- You can continue adding sections for other methods and functions such as Dispose, CheckHealth, etc. -->
+
+    </div>
+</body>
+</html>
