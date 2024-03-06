@@ -78,7 +78,7 @@ Configure SPARQL as DataSource
 
 Query SPARQL DataSource with Query Language and display as Table
 
-![DataSource Query Editor](img/QueryEditor.tsx.png)
+![DataSource Query Editor](img/QueryEditor.png)
 
 ## Examples:
 Here are a few example queries to get you started:
