@@ -93,7 +93,7 @@ func (d *Datasource) query(ctx context.Context, queryModel MyQuery, settings Dat
 
 	repo, err := sparql.NewRepo(settings.URL,
 		sparql.DigestAuth(settings.Username, settings.Password),
-		sparql.Timeout(time.Millisecond*1500),
+		sparql.Timeout(time.Millisecond*30000),
 	)
 
 	if err != nil {
